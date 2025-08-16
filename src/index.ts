@@ -1,19 +1,17 @@
 import chalk from "chalk";
-
 import figlet from "figlet";
 import gradient from "gradient-string";
 import inquirer from "inquirer";
 import {GetPublicIp} from "./GetPublicIp.Utils.ts";
 import {HashIp} from "./HashIp.Utils.ts";
+import {ShowProgress} from "./ProgressBar.Utils.ts";
 
-
-// نمایش متن گرافیکی اول برنامه
 console.log(
     gradient.pastel.multiline(figlet.textSync("IP Anonymizer", {horizontalLayout: "full"}))
 );
 
 let proxyActive = false;
-let proxyUrl = "http://127.0.0.1:8080"; // میشه بعدا عوضش کرد
+let proxyUrl = "";
 
 async function mainMenu() {
     while (true) {
@@ -32,12 +30,24 @@ async function mainMenu() {
         ]);
 
         if (choice === "🌐 Show my Real IP") {
+            await ShowProgress("Fetching Real IP...");
             const ip = await GetPublicIp();
             console.log(chalk.green("\nReal IP:"), chalk.yellow(ip));
             console.log(chalk.magenta("Hashed:"), chalk.cyan(HashIp(ip)), "\n");
         }
 
         if (choice === "🛡️ Activate Proxy & Show Masked IP") {
+            if (!proxyUrl) {
+                const {url} = await inquirer.prompt([
+                    {
+                        type: "input",
+                        name: "url",
+                        message: chalk.yellow("Enter Proxy URL (e.g. http://user:pass@host:port):"),
+                    },
+                ]);
+                proxyUrl = url;
+            }
+            await ShowProgress("Connecting via Proxy...");
             const ip = await GetPublicIp(proxyUrl);
             proxyActive = true;
             console.log(chalk.blue("\nProxy Active! 🚀"));
@@ -48,6 +58,7 @@ async function mainMenu() {
 
         if (choice === "↩️ Back to Real IP") {
             proxyActive = false;
+            await ShowProgress("Switching back to Real IP...");
             const ip = await GetPublicIp();
             console.log(chalk.red("\nProxy Disabled!"));
             console.log(chalk.green("Real IP:"), chalk.yellow(ip));
