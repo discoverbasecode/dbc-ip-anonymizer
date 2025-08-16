@@ -8,7 +8,7 @@ import {ShowProgress} from "./ProgressBar.Utils.ts";
 import {SelectWorkingProxy} from "./WorkingProxy.Utils.ts";
 
 console.log(
-    gradient.pastel.multiline(figlet.textSync("IP Anonymizer", {horizontalLayout: "full"}))
+    gradient.pastel.multiline(figlet.textSync("DBC IP Anonymizer", {horizontalLayout: "full"}))
 );
 
 let proxyActive = false;
