@@ -13,6 +13,7 @@ console.log(
 let proxyActive = false;
 let proxyUrl = "";
 
+// تابع منوی اصلی
 async function mainMenu() {
     while (true) {
         const {choice} = await inquirer.prompt([
@@ -23,12 +24,14 @@ async function mainMenu() {
                 choices: [
                     "🌐 Show my Real IP",
                     "🛡️ Activate Proxy & Show Masked IP",
+                    "✏️ Edit/Add Proxy",
                     "↩️ Back to Real IP",
                     "❌ Exit",
                 ],
             },
         ]);
 
+        // نمایش IP واقعی
         if (choice === "🌐 Show my Real IP") {
             await ShowProgress("Fetching Real IP...");
             const ip = await GetPublicIp();
@@ -36,26 +39,39 @@ async function mainMenu() {
             console.log(chalk.magenta("Hashed:"), chalk.cyan(HashIp(ip)), "\n");
         }
 
+        // فعال کردن Proxy
         if (choice === "🛡️ Activate Proxy & Show Masked IP") {
             if (!proxyUrl) {
-                const {url} = await inquirer.prompt([
-                    {
-                        type: "input",
-                        name: "url",
-                        message: chalk.yellow("Enter Proxy URL (e.g. http://user:pass@host:port):"),
-                    },
-                ]);
-                proxyUrl = url;
+                console.log(chalk.redBright("❌ No proxy set! Please add a proxy first."));
+                continue;
             }
             await ShowProgress("Connecting via Proxy...");
             const ip = await GetPublicIp(proxyUrl);
-            proxyActive = true;
-            console.log(chalk.blue("\nProxy Active! 🚀"));
-            console.log(chalk.green("Masked IP:"), chalk.yellow(ip));
-            console.log(chalk.magenta("Hashed:"), chalk.cyan(HashIp(ip)), "\n");
-            console.log(chalk.gray("App is running... Your IP is masked.\n"));
+            if (ip.startsWith("❌")) {
+                console.log(chalk.red("❌ Proxy failed! Try another one or edit proxy.\n"));
+            } else {
+                proxyActive = true;
+                console.log(chalk.blue("\nProxy Active! 🚀"));
+                console.log(chalk.green("Masked IP:"), chalk.yellow(ip));
+                console.log(chalk.magenta("Hashed:"), chalk.cyan(HashIp(ip)), "\n");
+                console.log(chalk.gray("App is running... Your IP is masked.\n"));
+            }
         }
 
+        // ویرایش یا اضافه کردن Proxy
+        if (choice === "✏️ Edit/Add Proxy") {
+            const {url} = await inquirer.prompt([
+                {
+                    type: "input",
+                    name: "url",
+                    message: chalk.yellow("Enter Proxy URL (e.g. http://user:pass@host:port):"),
+                },
+            ]);
+            proxyUrl = url;
+            console.log(chalk.green("\n✅ Proxy set successfully!\n"));
+        }
+
+        // برگشت به IP واقعی
         if (choice === "↩️ Back to Real IP") {
             proxyActive = false;
             await ShowProgress("Switching back to Real IP...");
@@ -65,6 +81,7 @@ async function mainMenu() {
             console.log(chalk.magenta("Hashed:"), chalk.cyan(HashIp(ip)), "\n");
         }
 
+        // خروج
         if (choice === "❌ Exit") {
             console.log(chalk.redBright("\n👋 Goodbye!\n"));
             process.exit(0);
