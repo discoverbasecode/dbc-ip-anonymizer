@@ -5,6 +5,7 @@ import inquirer from "inquirer";
 import {GetPublicIp} from "./GetPublicIp.Utils.ts";
 import {HashIp} from "./HashIp.Utils.ts";
 import {ShowProgress} from "./ProgressBar.Utils.ts";
+import {SelectWorkingProxy} from "./WorkingProxy.Utils.ts";
 
 console.log(
     gradient.pastel.multiline(figlet.textSync("IP Anonymizer", {horizontalLayout: "full"}))
@@ -13,7 +14,6 @@ console.log(
 let proxyActive = false;
 let proxyUrl = "";
 
-// تابع منوی اصلی
 async function mainMenu() {
     while (true) {
         const {choice} = await inquirer.prompt([
@@ -31,7 +31,7 @@ async function mainMenu() {
             },
         ]);
 
-        // نمایش IP واقعی
+
         if (choice === "🌐 Show my Real IP") {
             await ShowProgress("Fetching Real IP...");
             const ip = await GetPublicIp();
@@ -39,16 +39,26 @@ async function mainMenu() {
             console.log(chalk.magenta("Hashed:"), chalk.cyan(HashIp(ip)), "\n");
         }
 
-        // فعال کردن Proxy
         if (choice === "🛡️ Activate Proxy & Show Masked IP") {
             if (!proxyUrl) {
-                console.log(chalk.redBright("❌ No proxy set! Please add a proxy first."));
-                continue;
+                const workingProxy = await SelectWorkingProxy();
+                if (!workingProxy) {
+                    console.log(
+                        chalk.redBright(
+                            "\n❌ No working proxy found! Please add a new proxy manually.\n"
+                        )
+                    );
+                    continue;
+                }
+                proxyUrl = workingProxy;
+                console.log(chalk.green(`\n✅ Using working proxy: ${proxyUrl}\n`));
             }
+
             await ShowProgress("Connecting via Proxy...");
             const ip = await GetPublicIp(proxyUrl);
             if (ip.startsWith("❌")) {
-                console.log(chalk.red("❌ Proxy failed! Try another one or edit proxy.\n"));
+                console.log(chalk.red("❌ Proxy failed! Edit/Add another proxy.\n"));
+                proxyUrl = ""; // پاک کردن پراکسی خراب
             } else {
                 proxyActive = true;
                 console.log(chalk.blue("\nProxy Active! 🚀"));
@@ -58,7 +68,6 @@ async function mainMenu() {
             }
         }
 
-        // ویرایش یا اضافه کردن Proxy
         if (choice === "✏️ Edit/Add Proxy") {
             const {url} = await inquirer.prompt([
                 {
@@ -71,7 +80,6 @@ async function mainMenu() {
             console.log(chalk.green("\n✅ Proxy set successfully!\n"));
         }
 
-        // برگشت به IP واقعی
         if (choice === "↩️ Back to Real IP") {
             proxyActive = false;
             await ShowProgress("Switching back to Real IP...");
@@ -81,7 +89,6 @@ async function mainMenu() {
             console.log(chalk.magenta("Hashed:"), chalk.cyan(HashIp(ip)), "\n");
         }
 
-        // خروج
         if (choice === "❌ Exit") {
             console.log(chalk.redBright("\n👋 Goodbye!\n"));
             process.exit(0);
