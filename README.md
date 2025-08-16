@@ -1,5 +1,5 @@
 ![App Screenshot](./public/001.png)
-# IP Anonymizer Console App *Screenshot of the console application*
+# IP Anonymizer Console App *
 ---
 
 ## Overview
