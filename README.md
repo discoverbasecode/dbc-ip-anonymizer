@@ -1,7 +1,5 @@
 ![App Screenshot](./public/001.png)
 # IP Anonymizer Console App *
----
-
 ## Overview
 
 IP Anonymizer is a **minimal and colorful console application** that allows you to:
